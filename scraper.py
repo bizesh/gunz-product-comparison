@@ -1,38 +1,44 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+import undetected_chromedriver as uc
+import pandas as pd
 import time
+from selenium.webdriver.common.by import By
 
-# Set options
-options = Options()
-options.add_argument('--headless')
+# Setup headless stealth driver
+options = uc.ChromeOptions()
+options.headless = True
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
 
-# Start driver
-driver = webdriver.Chrome(options=options)
+driver = uc.Chrome(options=options)
 
-# Step 1: Go to login page
-driver.get("https://www.gunz.com.au/customer/account/login/")
+# STEP 1: Login to Gunz
+driver.get("https://www.gunz.com.au/login")
+time.sleep(3)
 
-# Step 2: Log in
-username = "your_username"
-password = "your_password"
-
-driver.find_element(By.ID, "email").send_keys(username)
-driver.find_element(By.ID, "pass").send_keys(password)
-driver.find_element(By.ID, "send2").click()
-time.sleep(5)  # Wait for login
-
-# Step 3: Go to a product category page
-driver.get("https://www.gunz.com.au/catalog/category/view/id/74")  # example category
+# Login (replace with your real credentials)
+driver.find_element(By.ID, "Email").send_keys("intern7@dentalfoundation.org.au")
+driver.find_element(By.ID, "Password").send_keys("12345")
+driver.find_element(By.CSS_SELECTOR, "button[type='submit']").click()
 time.sleep(5)
 
-# Step 4: Scrape first 5 products
-products = driver.find_elements(By.CSS_SELECTOR, ".product-item-info")[:5]
+# STEP 2: Go to products page
+driver.get("https://www.gunz.com.au/shop/category/oral-care-toothbrushes")
+time.sleep(5)
+
+# STEP 3: Scrape 5 products
+products = driver.find_elements(By.CSS_SELECTOR, ".product-box")[:5]
+data = []
+
 for product in products:
-    title = product.find_element(By.CSS_SELECTOR, ".product-item-link").text
-    price = product.find_element(By.CSS_SELECTOR, ".price").text
-    print(f"{title} - {price}")
+    try:
+        title = product.find_element(By.CSS_SELECTOR, ".product-title").text
+        price = product.find_element(By.CSS_SELECTOR, ".price").text
+        data.append({"Title": title, "Price": price})
+    except:
+        continue
 
 driver.quit()
+
+# Show as table
+df = pd.DataFrame(data)
+print(df)
